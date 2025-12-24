@@ -16,7 +16,7 @@ const Logo = ({ className = "w-8 h-8" }) => (
   </svg>
 );
 
-function App = () => {
+const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [view, setView] = useState('login');
   const [cars, setCars] = useState([]);
