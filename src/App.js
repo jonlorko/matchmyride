@@ -1541,10 +1541,8 @@ const App = () => {
             </div>
           </div>
           {/* Swipe Instructions */}
-          <div className="mt-4 text-center text-zinc-400 text-sm font-light flex items-center justify-center gap-4">
-            <span>ðŸ‘‰ Wische rechts fÃ¼r Anfrage</span>
-            <span>â€¢</span>
-            <span>ðŸ‘ˆ Wische links zum Ãœberspringen</span>
+          <div className="mt-4 text-center text-zinc-400 text-sm font-light">
+            <p>Wische nach rechts fÃ¼r Anfrage | Wische nach links zum Ãœberspringen</p>
           </div>
         </div>
 
