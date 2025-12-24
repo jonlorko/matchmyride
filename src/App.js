@@ -39,6 +39,13 @@ function App = () => {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingForm, setRatingForm] = useState({ sellerId: '', stars: 5, comment: '' });
   const [equipmentSearch, setEquipmentSearch] = useState('');
+  
+  // Swipe States
+  const [swipeStartX, setSwipeStartX] = useState(0);
+  const [swipeCurrentX, setSwipeCurrentX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const [swipeDirection, setSwipeDirection] = useState(null);
+  
   const [filters, setFilters] = useState({ 
     marke: '', 
     modell: '',
@@ -410,6 +417,74 @@ function App = () => {
     setCurrentCarIndex(p => p + 1);
   };
 
+  // Touch Handlers fÃ¼r Swipe (Mobile)
+  const handleTouchStart = (e) => {
+    setSwipeStartX(e.touches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isSwiping) return;
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - swipeStartX;
+    setSwipeCurrentX(diff);
+    if (Math.abs(diff) > 50) {
+      setSwipeDirection(diff > 0 ? 'right' : 'left');
+    } else {
+      setSwipeDirection(null);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isSwiping) return;
+    const swipeThreshold = 100;
+    if (Math.abs(swipeCurrentX) > swipeThreshold) {
+      if (swipeCurrentX > 0) {
+        handleSwipe('right');
+      } else {
+        handleSwipe('left');
+      }
+    }
+    setIsSwiping(false);
+    setSwipeCurrentX(0);
+    setSwipeDirection(null);
+    setSwipeStartX(0);
+  };
+
+  // Mouse Handlers fÃ¼r Swipe (Desktop)
+  const handleMouseDown = (e) => {
+    setSwipeStartX(e.clientX);
+    setIsSwiping(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isSwiping) return;
+    const currentX = e.clientX;
+    const diff = currentX - swipeStartX;
+    setSwipeCurrentX(diff);
+    if (Math.abs(diff) > 50) {
+      setSwipeDirection(diff > 0 ? 'right' : 'left');
+    } else {
+      setSwipeDirection(null);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (!isSwiping) return;
+    const swipeThreshold = 100;
+    if (Math.abs(swipeCurrentX) > swipeThreshold) {
+      if (swipeCurrentX > 0) {
+        handleSwipe('right');
+      } else {
+        handleSwipe('left');
+      }
+    }
+    setIsSwiping(false);
+    setSwipeCurrentX(0);
+    setSwipeDirection(null);
+    setSwipeStartX(0);
+  };
+
   const handleRequestResponse = async (reqId, accept) => {
     const updated = requests.map(r => r.id === reqId ? { ...r, status: accept ? 'accepted' : 'rejected' } : r);
     setRequests(updated);
@@ -714,11 +789,7 @@ function App = () => {
         <div className="bg-white border border-zinc-200 rounded-xl p-10 w-full max-w-md">
           <div className="text-center mb-10">
             <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-              <img 
-                <Logo className="w-8 h-8" />
-                alt="MatchMyRide Logo" 
-                className="w-full h-full object-contain"
-              />
+              <Logo className="w-full h-full" />
             </div>
             <h1 className="text-4xl font-light text-blue-900 mb-2 tracking-tight">MatchMyRide</h1>
             <p className="text-zinc-600 text-sm font-light">Premium Automobile Matching</p>
@@ -1340,11 +1411,43 @@ function App = () => {
           </div>
         </header>
         <div className="flex-1 flex items-center justify-center p-6">
-          <div className="bg-white rounded-xl border border-zinc-200 w-full max-w-md overflow-hidden shadow-2xl">
+          <div 
+            className="bg-white rounded-xl border border-zinc-200 w-full max-w-md overflow-hidden shadow-2xl relative"
+            style={{
+              transform: `translateX(${swipeCurrentX}px) rotate(${swipeCurrentX * 0.03}deg)`,
+              transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+              cursor: isSwiping ? 'grabbing' : 'grab',
+              userSelect: 'none',
+              touchAction: 'pan-y'
+            }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            {/* Swipe Direction Indicators */}
+            {swipeDirection === 'right' && (
+              <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center z-10 pointer-events-none">
+                <div className="bg-green-500 text-white px-8 py-4 rounded-2xl text-2xl font-bold rotate-12 border-4 border-white shadow-2xl">
+                  â¤ï¸ ANFRAGE
+                </div>
+              </div>
+            )}
+            {swipeDirection === 'left' && (
+              <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center z-10 pointer-events-none">
+                <div className="bg-red-500 text-white px-8 py-4 rounded-2xl text-2xl font-bold -rotate-12 border-4 border-white shadow-2xl">
+                  âŒ SKIP
+                </div>
+              </div>
+            )}
             {car.bilder && car.bilder.length > 0 ? (
               <div 
                 className="h-80 relative bg-gray-100 cursor-pointer"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setSelectedCarForDetail(car);
                   setShowDetailView(true);
                   setCurrentImageIndex(0);
@@ -1363,7 +1466,8 @@ function App = () => {
             ) : (
               <div 
                 className="h-80 bg-gray-100 flex items-center justify-center cursor-pointer"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setSelectedCarForDetail(car);
                   setShowDetailView(true);
                   setCurrentImageIndex(0);
@@ -1425,16 +1529,22 @@ function App = () => {
               )}
             </div>
             <div className="flex gap-3 p-6 pt-0 bg-white">
-              <button onClick={() => handleSwipe('left')} className="flex-1 bg-zinc-100 border border-zinc-300 text-zinc-700 p-4 rounded-lg flex items-center justify-center gap-2 hover:bg-zinc-200 transition font-light">
+              <button onClick={(e) => { e.stopPropagation(); handleSwipe('left'); }} className="flex-1 bg-zinc-100 border border-zinc-300 text-zinc-700 p-4 rounded-lg flex items-center justify-center gap-2 hover:bg-zinc-200 transition font-light">
                 <X size={20} strokeWidth={1.5} /> Ablehnen
               </button>
-              <button onClick={() => handleFavorite(car.id)} className="bg-zinc-100 border border-zinc-300 text-zinc-700 p-4 rounded-lg hover:bg-zinc-200 transition">
+              <button onClick={(e) => { e.stopPropagation(); handleFavorite(car.id); }} className="bg-zinc-100 border border-zinc-300 text-zinc-700 p-4 rounded-lg hover:bg-zinc-200 transition">
                 <Star size={20} strokeWidth={1.5} />
               </button>
-              <button onClick={() => handleSwipe('right')} className="flex-1 bg-orange-500 text-white p-4 rounded-lg flex items-center justify-center gap-2 hover:bg-orange-600 transition font-normal">
+              <button onClick={(e) => { e.stopPropagation(); handleSwipe('right'); }} className="flex-1 bg-orange-500 text-white p-4 rounded-lg flex items-center justify-center gap-2 hover:bg-orange-600 transition font-normal">
                 <Heart size={20} strokeWidth={1.5} /> Anfragen
               </button>
             </div>
+          </div>
+          {/* Swipe Instructions */}
+          <div className="mt-4 text-center text-zinc-400 text-sm font-light flex items-center justify-center gap-4">
+            <span>ðŸ‘‰ Wische rechts fÃ¼r Anfrage</span>
+            <span>â€¢</span>
+            <span>ðŸ‘ˆ Wische links zum Ãœberspringen</span>
           </div>
         </div>
 
