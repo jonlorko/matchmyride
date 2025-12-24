@@ -394,26 +394,21 @@ const App = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      localStorage.removeItem('currentSession');
-    } catch (e) {
-      console.error('Failed to clear session:', e);
-    }
-    setCurrentUser(null);
-    setView('login');
-  };
-
-  const handleSwipe = async (direction) => {
+const handleSwipe = async (direction) => {
     if (direction === 'right') {
       const filteredCars = getFilteredCars();
       const car = filteredCars[currentCarIndex];
       const req = { id: Date.now(), carId: car.id, buyerId: currentUser.id, sellerId: car.sellerId, status: 'pending' };
       const updated = [...requests, req];
       setRequests(updated);
-      try { localStorage.setItem('requests', JSON.stringify(updated)); 
-      alert('Anfrage gesendet!');
-    }
+      
+      try { 
+        localStorage.setItem('requests', JSON.stringify(updated)); 
+        alert('Anfrage gesendet!');
+      } catch (error) {
+        console.error("Fehler beim Speichern:", error);
+      }
+    } // Hier wurde die Klammer für das "if" geschlossen
     setCurrentCarIndex(p => p + 1);
   };
 
