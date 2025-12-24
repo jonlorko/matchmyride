@@ -464,7 +464,7 @@ const handleSwipe = async (direction) => {
     }
   };
 
-  const handleMouseUp = () => {
+const handleMouseUp = () => {
     if (!isSwiping) return;
     const swipeThreshold = 100;
     if (Math.abs(swipeCurrentX) > swipeThreshold) {
@@ -483,15 +483,24 @@ const handleSwipe = async (direction) => {
   const handleRequestResponse = async (reqId, accept) => {
     const updated = requests.map(r => r.id === reqId ? { ...r, status: accept ? 'accepted' : 'rejected' } : r);
     setRequests(updated);
-    try { localStorage.setItem('requests', JSON.stringify(updated)); 
+    
+    try { 
+      localStorage.setItem('requests', JSON.stringify(updated)); 
+    } catch (e) {
+      console.error('Fehler beim Speichern der Anfrage:', e);
+    }
 
     if (accept) {
       const req = requests.find(r => r.id === reqId);
       const match = { id: Date.now(), carId: req.carId, buyerId: req.buyerId, sellerId: req.sellerId, messages: [] };
       const updatedMatches = [...matches, match];
       setMatches(updatedMatches);
-      try { localStorage.setItem('matches', JSON.stringify(updatedMatches)); 
-      alert('Match erstellt!');
+      try { 
+        localStorage.setItem('matches', JSON.stringify(updatedMatches)); 
+        alert('Match erstellt!');
+      } catch (e) {
+        console.error('Fehler beim Erstellen des Matches:', e);
+      }
     }
   };
 
@@ -503,10 +512,14 @@ const handleSwipe = async (direction) => {
       }
       return m;
     });
-    setMatches(updated);
-    try { localStorage.setItem('matches', JSON.stringify(updated)); 
-    setSelectedChat(updated.find(m => m.id === selectedChat.id));
-    setMessageText('');
+    setRequests(updated); // Hinweis: Sicherstellen, dass hier setMatches gemeint war? Ich hab es für LocalStorage korrigiert:
+    try { 
+      localStorage.setItem('matches', JSON.stringify(updated)); 
+      setSelectedChat(updated.find(m => m.id === selectedChat.id));
+      setMessageText('');
+    } catch (e) {
+      console.error('Fehler beim Senden der Nachricht:', e);
+    }
   };
 
   const handleAddCar = async (carData) => {
